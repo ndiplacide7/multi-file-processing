@@ -8,17 +8,23 @@ import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
-import org.springframework.batch.item.file.FlatFileItemReader;
+import org.springframework.batch.item.file.MultiResourceItemReader;
+import org.springframework.batch.item.file.ResourceAwareItemReaderItemStream;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
+import org.springframework.batch.item.file.builder.MultiResourceItemReaderBuilder;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
 @Slf4j
 public class ImportVehicleInvoicesJobConfig {
 
+    @Value("${input.forder.vehicles}")
+    private Resource[] resources;
 
     @Bean
     public Job importVehicleJob(JobRepository jobRepository, Step importVehicleStep) {
@@ -43,7 +49,16 @@ public class ImportVehicleInvoicesJobConfig {
         return item;
     }
 
-    public FlatFileItemReader<VehicleDTO> vehicleFlatItemReader() {
+    MultiResourceItemReader<VehicleDTO> vehicleMultiResourceItemReader() {
+        return new MultiResourceItemReaderBuilder<VehicleDTO>()
+                .name("Vehicle resource reader")
+                .resources(resources)
+                .delegate(vehicleFlatItemReader())
+                .build();
+
+    }
+
+    public ResourceAwareItemReaderItemStream<VehicleDTO> vehicleFlatItemReader() {
         return new FlatFileItemReaderBuilder<VehicleDTO>()
                 .name("vehicleItemReader")
                 .resource(new ClassPathResource("data/tesla_invoices.csv"))
