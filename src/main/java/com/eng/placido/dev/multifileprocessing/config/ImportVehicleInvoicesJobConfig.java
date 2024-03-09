@@ -39,7 +39,7 @@ public class ImportVehicleInvoicesJobConfig {
         return new StepBuilder("importVehicleStep", jobRepository)
                 .<VehicleDTO, VehicleDTO>chunk(100, transactionManager)
                 .reader(vehicleFlatItemReader())
-                .processor(item -> vehicleProcessor(item))
+                .processor(ImportVehicleInvoicesJobConfig::vehicleProcessor)
                 .writer(items -> log.info("Writing {} items", items.size()))
                 .build();
     }
